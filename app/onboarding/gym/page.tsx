@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { OnboardingCard } from '@/components/onboarding/OnboardingCard';
+import { SelectableButton } from '@/components/onboarding/SelectableButton';
 
 export default function OnboardingGymPage() {
     const router = useRouter();
@@ -12,7 +13,8 @@ export default function OnboardingGymPage() {
     const handleNext = () => {
         if (ownGym === null) return;
         console.log('Own gym:', ownGym);
-        // router.push('/onboarding/specialization'); // Next step TBD
+        // console.log('Own gym:', ownGym);
+        router.push('/onboarding/speciality');
     };
 
     const handleBack = () => {
@@ -33,24 +35,18 @@ export default function OnboardingGymPage() {
 
                 <div className="w-full flex justify-center">
                     <div className="w-full max-w-[400px] flex flex-col gap-[12px]">
-                        <button
+                        <SelectableButton
+                            label="Yes"
+                            selected={ownGym === true}
                             onClick={() => setOwnGym(true)}
-                            className={`w-full h-[50px] rounded-[12px] border transition-all text-sm font-medium ${ownGym === true
-                                ? 'border-[#F37B2F] bg-white text-gray-900 ring-1 ring-[#F37B2F]'
-                                : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'
-                                }`}
-                        >
-                            Yes
-                        </button>
-                        <button
+                            className="w-full h-[50px] rounded-[12px] text-sm"
+                        />
+                        <SelectableButton
+                            label="No"
+                            selected={ownGym === false}
                             onClick={() => setOwnGym(false)}
-                            className={`w-full h-[50px] rounded-[12px] border transition-all text-sm font-medium ${ownGym === false
-                                ? 'border-[#F37B2F] bg-white text-gray-900 ring-1 ring-[#F37B2F]'
-                                : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'
-                                }`}
-                        >
-                            No
-                        </button>
+                            className="w-full h-[50px] rounded-[12px] text-sm"
+                        />
                     </div>
                 </div>
             </OnboardingCard>

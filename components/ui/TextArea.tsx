@@ -15,7 +15,7 @@ export function TextArea({ label, error, className = '', id, ...props }: TextAre
             )}
             <textarea
                 id={id}
-                className={`w-full px-4 py-3.5 bg-white border ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-200 focus:border-gray-900 focus:ring-gray-900'} rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-1 transition-all placeholder:text-gray-600 resize-none ${className}`}
+                className={`w-full px-4 py-3.5 bg-white border ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-200 focus:border-[#F37B2F] focus:ring-[#F37B2F]'} rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-1 transition-all placeholder:text-gray-600 resize-none ${className}`}
                 {...props}
             />
             {error && (

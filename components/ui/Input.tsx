@@ -24,7 +24,7 @@ export function Input({ label, error, className = '', type = 'text', id, ...prop
                 <input
                     id={id}
                     type={inputType}
-                    className={`w-full px-4 py-3.5 bg-white border ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-200 focus:border-gray-900 focus:ring-gray-900'} rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-1 transition-all placeholder:text-gray-600 ${isPassword ? 'pr-12' : ''} ${className}`}
+                    className={`w-full px-4 py-3.5 bg-white border ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-200 focus:border-[#F37B2F] focus:ring-[#F37B2F]'} rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-1 transition-all placeholder:text-gray-600 ${isPassword ? 'pr-12' : ''} ${className}`}
                     {...props}
                 />
                 {isPassword && (

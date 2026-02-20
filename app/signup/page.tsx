@@ -110,7 +110,7 @@ export default function SignupPage() {
                     id="password"
                     label="Password"
                     type="password"
-                    placeholder="Create password"
+                    placeholder="Enter Here"
                     value={formData.password}
                     onChange={handleChange}
                     error={errors.password}
@@ -119,7 +119,7 @@ export default function SignupPage() {
                 {/* Confirm Password */}
                 <Input
                     id="confirmPassword"
-                    label="Enter Here"
+                    label="Confirm Password"
                     type="password"
                     placeholder="Enter Here"
                     value={formData.confirmPassword}
