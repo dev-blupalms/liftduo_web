@@ -17,7 +17,7 @@ export function Select({ label, error, options, className = '', id, ...props }: 
             <div className="relative">
                 <select
                     id={id}
-                    className={`w-full px-4 py-3.5 bg-white border ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-200 focus:border-gray-900 focus:ring-gray-900'} rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-1 transition-all appearance-none cursor-pointer ${className}`}
+                    className={`w-full px-4 py-3.5 bg-white border ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-200 focus:border-[#F37B2F] focus:ring-[#F37B2F]'} rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-1 transition-all appearance-none cursor-pointer ${className}`}
                     {...props}
                 >
                     <option value="" disabled>Select</option>

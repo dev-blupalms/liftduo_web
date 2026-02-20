@@ -1,22 +1,30 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { OnboardingCard } from '@/components/onboarding/OnboardingCard';
+import { SelectableButton } from '@/components/onboarding/SelectableButton';
 
-export default function OnboardingGymPage() {
-    const router = useRouter();
-    const [ownGym, setOwnGym] = useState<boolean | null>(null);
+interface GymStepProps {
+    data?: Record<string, unknown>;
+    onNext: (data: { step: number; hasGym: boolean }) => void;
+    onBack: () => void;
+    isPending: boolean;
+    error: Error | null;
+}
+
+export function GymStep({ data, onNext, onBack, isPending, error }: GymStepProps) {
+    const [ownGym, setOwnGym] = useState<boolean | null>(
+        typeof data?.hasGym === 'boolean' ? data.hasGym : null
+    );
 
     const handleNext = () => {
         if (ownGym === null) return;
-        console.log('Own gym:', ownGym);
-        // router.push('/onboarding/specialization'); // Next step TBD
-    };
 
-    const handleBack = () => {
-        router.push('/onboarding/location');
+        onNext({
+            step: 3,
+            hasGym: ownGym
+        });
     };
 
     return (
@@ -33,24 +41,23 @@ export default function OnboardingGymPage() {
 
                 <div className="w-full flex justify-center">
                     <div className="w-full max-w-[400px] flex flex-col gap-[12px]">
-                        <button
+                        {error && (
+                            <div className="mb-4 p-3 text-sm text-red-500 bg-red-50 rounded-lg border border-red-200">
+                                {error.message || 'Something went wrong. Please try again.'}
+                            </div>
+                        )}
+                        <SelectableButton
+                            label="Yes"
+                            selected={ownGym === true}
                             onClick={() => setOwnGym(true)}
-                            className={`w-full h-[50px] rounded-[12px] border transition-all text-sm font-medium ${ownGym === true
-                                ? 'border-[#F37B2F] bg-white text-gray-900 ring-1 ring-[#F37B2F]'
-                                : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'
-                                }`}
-                        >
-                            Yes
-                        </button>
-                        <button
+                            className="w-full h-[50px] rounded-[12px] text-sm"
+                        />
+                        <SelectableButton
+                            label="No"
+                            selected={ownGym === false}
                             onClick={() => setOwnGym(false)}
-                            className={`w-full h-[50px] rounded-[12px] border transition-all text-sm font-medium ${ownGym === false
-                                ? 'border-[#F37B2F] bg-white text-gray-900 ring-1 ring-[#F37B2F]'
-                                : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'
-                                }`}
-                        >
-                            No
-                        </button>
+                            className="w-full h-[50px] rounded-[12px] text-sm"
+                        />
                     </div>
                 </div>
             </OnboardingCard>
@@ -58,16 +65,17 @@ export default function OnboardingGymPage() {
             <div className="w-full flex flex-col-reverse sm:flex-row sm:justify-end gap-[15px] sm:gap-[10px] mt-[40px]">
                 <Button
                     variant="outline"
-                    onClick={handleBack}
+                    onClick={onBack}
                     className="w-full sm:w-[150px] h-[52px] rounded-full text-base font-bold bg-white text-black border !border-black hover:bg-gray-50"
                 >
                     Back
                 </Button>
                 <Button
                     onClick={handleNext}
+                    disabled={isPending || ownGym === null}
                     className="bg-black hover:bg-gray-800 text-white w-full sm:w-[250px] h-[52px] rounded-full text-base font-bold"
                 >
-                    Next
+                    {isPending ? 'Saving...' : 'Next'}
                 </Button>
             </div>
         </div>
