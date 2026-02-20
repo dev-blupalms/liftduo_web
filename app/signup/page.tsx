@@ -1,52 +1,35 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { signupSchema, SignupFormData } from '@/lib/validations/auth';
+import { useSignup } from '@/hooks/useAuth';
 
 export default function SignupPage() {
-    const [errors, setErrors] = useState<{ [key: string]: string }>({});
+    const signup = useSignup();
 
-    // Form fields state
-    const [formData, setFormData] = useState({
-        fullName: '',
-        email: '',
-        gender: '',
-        password: '',
-        confirmPassword: ''
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+    } = useForm<SignupFormData>({
+        resolver: zodResolver(signupSchema),
+        defaultValues: {
+            fullName: '',
+            email: '',
+            gender: undefined,
+            password: '',
+            confirmPassword: '',
+        },
     });
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { id, value } = e.target;
-        setFormData(prev => ({ ...prev, [id]: value }));
-        // Clear error when user types
-        if (errors[id]) {
-            setErrors(prev => ({ ...prev, [id]: '' }));
-        }
-    };
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        const newErrors: { [key: string]: string } = {};
-
-        if (!formData.fullName) newErrors.fullName = 'Full Name is required';
-        if (!formData.email) newErrors.email = 'Email is required';
-        if (!formData.gender) newErrors.gender = 'Gender is required';
-        if (!formData.password) newErrors.password = 'Password is required';
-        if (!formData.confirmPassword) {
-            newErrors.confirmPassword = 'Confirm Password is required';
-        } else if (formData.password !== formData.confirmPassword) {
-            newErrors.confirmPassword = 'Passwords do not match';
-        }
-
-        setErrors(newErrors);
-
-        if (Object.keys(newErrors).length === 0) {
-            console.log('Signup submitted:', formData);
-        }
+    const onSubmit = (data: SignupFormData) => {
+        signup.mutate(data);
     };
 
     return (
@@ -69,15 +52,21 @@ export default function SignupPage() {
                 </p>
             }
         >
-            <form className="space-y-5" onSubmit={handleSubmit}>
+            <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
+                {/* Global Error Message */}
+                {signup.isError && (
+                    <div className="p-3 text-sm text-red-500 bg-red-50 rounded-lg border border-red-200">
+                        {signup.error?.message || 'Something went wrong. Please try again.'}
+                    </div>
+                )}
+
                 {/* Full Name */}
                 <Input
                     id="fullName"
                     label="Full Name"
                     placeholder="Enter here"
-                    value={formData.fullName}
-                    onChange={handleChange}
-                    error={errors.fullName}
+                    {...register('fullName')}
+                    error={errors.fullName?.message}
                 />
 
                 {/* Email */}
@@ -86,9 +75,8 @@ export default function SignupPage() {
                     label="Email"
                     type="email"
                     placeholder="Enter here"
-                    value={formData.email}
-                    onChange={handleChange}
-                    error={errors.email}
+                    {...register('email')}
+                    error={errors.email?.message}
                 />
 
                 {/* Gender */}
@@ -100,9 +88,8 @@ export default function SignupPage() {
                         { label: 'Female', value: 'female' },
                         { label: 'Other', value: 'other' }
                     ]}
-                    value={formData.gender}
-                    onChange={handleChange}
-                    error={errors.gender}
+                    {...register('gender')}
+                    error={errors.gender?.message}
                 />
 
                 {/* Password */}
@@ -111,9 +98,8 @@ export default function SignupPage() {
                     label="Password"
                     type="password"
                     placeholder="Enter Here"
-                    value={formData.password}
-                    onChange={handleChange}
-                    error={errors.password}
+                    {...register('password')}
+                    error={errors.password?.message}
                 />
 
                 {/* Confirm Password */}
@@ -122,14 +108,18 @@ export default function SignupPage() {
                     label="Confirm Password"
                     type="password"
                     placeholder="Enter Here"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    error={errors.confirmPassword}
+                    {...register('confirmPassword')}
+                    error={errors.confirmPassword?.message}
                 />
 
                 {/* Signup Button */}
-                <Button type="submit" fullWidth className="text-white mt-2">
-                    Signup
+                <Button
+                    type="submit"
+                    fullWidth
+                    className="text-white mt-2"
+                    disabled={signup.isPending}
+                >
+                    {signup.isPending ? 'Signing up...' : 'Signup'}
                 </Button>
             </form>
         </AuthLayout>

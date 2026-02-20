@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 
-export default function VerificationPage() {
+export function VerificationStep() {
     return (
         <div className="flex flex-col items-center justify-center flex-1 w-full font-roboto">
             <div className="w-full max-w-[822px] mx-auto text-center bg-white p-[40px] rounded-[12px] shadow-[0_0_40px_rgba(0,0,0,0.08)]">

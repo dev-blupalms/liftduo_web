@@ -1,14 +1,20 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { OnboardingCard } from '@/components/onboarding/OnboardingCard';
 import Image from 'next/image';
 
-export default function OnboardingPhotoPage() {
-    const router = useRouter();
-    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+interface PhotoStepProps {
+    data?: Record<string, unknown>;
+    onNext: (data: { step: number; photoUrl: string }) => void;
+    onBack: () => void;
+    isPending: boolean;
+    error: Error | null;
+}
+
+export function PhotoStep({ data, onNext, onBack, isPending, error }: PhotoStepProps) {
+    const [selectedImage, setSelectedImage] = useState<string | null>((data?.profileImage as string) || null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -27,13 +33,10 @@ export default function OnboardingPhotoPage() {
     };
 
     const handleNext = () => {
-        console.log('Photo step submitted', selectedImage ? 'Image uploaded' : 'No image');
-        // Final step or next step
-        router.push('/onboarding/verification');
-    };
-
-    const handleBack = () => {
-        router.push('/onboarding/services');
+        onNext({
+            step: 6,
+            photoUrl: selectedImage || 'https://via.placeholder.com/150'
+        });
     };
 
     return (
@@ -50,6 +53,11 @@ export default function OnboardingPhotoPage() {
 
                 <div className="w-full flex justify-center">
                     <div className="flex flex-col items-center justify-center w-full max-w-[400px]">
+                        {error && (
+                            <div className="w-full mb-4 p-3 text-sm text-red-500 bg-red-50 rounded-lg border border-red-200 text-center">
+                                {error.message || 'Something went wrong. Please try again.'}
+                            </div>
+                        )}
 
                         <input
                             type="file"
@@ -72,7 +80,7 @@ export default function OnboardingPhotoPage() {
                                     fill="none"
                                     stroke="#0F0F0F"
                                     strokeWidth="1"
-                                    strokeDasharray="6 6" // Tuned for better visual balance
+                                    strokeDasharray="6 6"
                                 />
                             </svg>
 
@@ -84,7 +92,6 @@ export default function OnboardingPhotoPage() {
                                     className="object-cover rounded-full"
                                 />
                             ) : (
-                                // Placeholder Image - Path as requested by user
                                 <div className="relative w-[75px] h-[75px] opacity-75">
                                     <Image
                                         src="/images/upload_placeholder.png"
@@ -106,16 +113,17 @@ export default function OnboardingPhotoPage() {
             <div className="w-full flex flex-col-reverse sm:flex-row sm:justify-end gap-[15px] sm:gap-[10px] mt-[40px]">
                 <Button
                     variant="outline"
-                    onClick={handleBack}
+                    onClick={onBack}
                     className="w-full sm:w-[150px] h-[52px] rounded-full text-base font-bold bg-white text-black border !border-black hover:bg-gray-50 bg-opacity-0"
                 >
                     Back
                 </Button>
                 <Button
                     onClick={handleNext}
+                    disabled={isPending}
                     className="bg-black hover:bg-gray-800 text-white w-full sm:w-[250px] h-[52px] rounded-full text-base font-bold"
                 >
-                    Submit
+                    {isPending ? 'Submitting...' : 'Submit'}
                 </Button>
             </div>
         </div>

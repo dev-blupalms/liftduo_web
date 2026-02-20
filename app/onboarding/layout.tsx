@@ -1,21 +1,41 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import { Logo } from '@/components/ui/Logo';
-
-const STEPS = {
-    '/onboarding': 1,
-    '/onboarding/location': 2,
-    '/onboarding/gym': 3,
-    '/onboarding/speciality': 4,
-    '/onboarding/services': 5,
-    '/onboarding/photo': 6,
-    // Future steps will be added here
-};
+import { useUser } from '@/hooks/useUser';
 
 export default function OnboardingLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
-    const currentStep = STEPS[pathname as keyof typeof STEPS] || 1;
+    const router = useRouter();
+    const { data: user, isLoading, isError } = useUser();
+
+    useEffect(() => {
+        if (isError) {
+            router.push('/login');
+            return;
+        }
+
+        if (isLoading || !user) return;
+
+        // If user is already verified and finished onboarding, they shouldn't be here
+        if (user.isVerified && user.onboardingStep >= 7) {
+            router.replace('/dashboard'); // Or wherever verified users go
+            return;
+        }
+
+        // If user is NOT on /onboarding but is in the folder (old paths), redirect to /onboarding
+        // but let's keep it simple for now, the user will delete old paths.
+    }, [user, isLoading, isError, pathname, router]);
+
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen w-full flex items-center justify-center bg-[#F9FAFB]">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen w-full flex flex-col items-center bg-[#F9FAFB] pt-10 px-4 sm:px-6 pb-10">
@@ -23,26 +43,6 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
             <div className="mb-12">
                 <Logo className="text-[50px]" />
             </div>
-
-            {/* Title & Progress - HIDDEN for Photo and Verification steps */}
-            {!['/onboarding/photo', '/onboarding/verification'].includes(pathname) && (
-                <>
-                    <h2 className="text-4xl font-black text-gray-900 mb-8 text-center tracking-tight">
-                        Let&apos;s get you started
-                    </h2>
-
-                    {/* Progress Bar */}
-                    <div className="flex space-x-3 mb-12">
-                        {[1, 2, 3, 4, 5].map((step) => (
-                            <div
-                                key={step}
-                                className={`h-1.5 w-12 rounded-full transition-colors duration-300 ${step <= currentStep ? 'bg-black' : 'bg-gray-200'
-                                    }`}
-                            />
-                        ))}
-                    </div>
-                </>
-            )}
 
             {/* Main Content Area */}
             <div className="w-full max-w-[822px] flex-1 flex flex-col">

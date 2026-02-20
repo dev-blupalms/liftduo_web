@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { OnboardingCard } from '@/components/onboarding/OnboardingCard';
 import { Select } from '@/components/ui/Select';
@@ -9,9 +8,8 @@ import { Input } from '@/components/ui/Input';
 import { TextArea } from '@/components/ui/TextArea';
 
 const LOCATIONS = [
-    { label: 'In person', value: 'in_person' },
-    { label: 'Online', value: 'online' },
-    { label: 'Hybrid', value: 'hybrid' }
+    { label: 'In person', value: 'OFFLINE' },
+    { label: 'Online', value: 'ONLINE' },
 ];
 
 const DAYS = Array.from({ length: 7 }, (_, i) => ({
@@ -19,25 +17,59 @@ const DAYS = Array.from({ length: 7 }, (_, i) => ({
     value: (i + 1).toString()
 }));
 
-export default function OnboardingServicesPage() {
-    const router = useRouter();
+interface ServicesStepProps {
+    data?: Record<string, unknown>;
+    onNext: (data: { step: number; services: Record<string, unknown>[] }) => void;
+    onBack: () => void;
+    isPending: boolean;
+    error: Error | null;
+}
 
-    const [formData, setFormData] = useState({
-        thirtyMin: {
-            location: '',
-            days: '',
-            price: '',
-            description: ''
-        },
-        oneHour: {
-            location: '',
-            days: '',
-            price: '',
-            description: ''
+export function ServicesStep({ data, onNext, onBack, isPending, error }: ServicesStepProps) {
+    const [formData, setFormData] = useState(() => {
+        const defaultData = {
+            thirtyMin: {
+                location: '',
+                days: '',
+                price: '',
+                description: ''
+            },
+            oneHour: {
+                location: '',
+                days: '',
+                price: '',
+                description: ''
+            }
+        };
+
+        if (data?.services && Array.isArray(data.services)) {
+            const services = data.services;
+            const thirty = services.find((s: Record<string, unknown>) => s.durationMinutes === 30);
+            const hour = services.find((s: Record<string, unknown>) => s.durationMinutes === 60);
+
+            if (thirty) {
+                defaultData.thirtyMin = {
+                    location: (thirty.locationType as string) || '',
+                    days: '',
+                    price: (thirty.price as number)?.toString() || '',
+                    description: (thirty.description as string) || ''
+                };
+            }
+            if (hour) {
+                defaultData.oneHour = {
+                    location: (hour.locationType as string) || '',
+                    days: '',
+                    price: (hour.price as number)?.toString() || '',
+                    description: (hour.description as string) || ''
+                };
+            }
         }
+        return defaultData;
     });
 
-    const [errors, setErrors] = useState<{ [key: string]: string }>({});
+    const [localErrors, setLocalErrors] = useState<{ [key: string]: string }>({});
+
+
 
     const handleChange = (section: 'thirtyMin' | 'oneHour', field: string, value: string) => {
         setFormData(prev => ({
@@ -47,25 +79,40 @@ export default function OnboardingServicesPage() {
                 [field]: value
             }
         }));
-        // Clear error when user types
-        if (errors[`${section}.${field}`]) {
-            setErrors(prev => {
-                const newErrors = { ...prev };
-                delete newErrors[`${section}.${field}`];
-                return newErrors;
-            });
-        }
     };
 
     const handleNext = () => {
-        // Basic validation (optional, can be stricter based on requirements)
-        // For now, let's just log and proceed
-        console.log('Services data:', formData);
-        router.push('/onboarding/photo');
-    };
+        const services = [];
 
-    const handleBack = () => {
-        router.push('/onboarding/speciality');
+        if (formData.thirtyMin.price) {
+            services.push({
+                title: '30 Minutes Training',
+                durationMinutes: 30,
+                price: formData.thirtyMin.price,
+                description: formData.thirtyMin.description,
+                locationType: formData.thirtyMin.location || 'ONLINE'
+            });
+        }
+
+        if (formData.oneHour.price) {
+            services.push({
+                title: '1 Hour Training',
+                durationMinutes: 60,
+                price: formData.oneHour.price,
+                description: formData.oneHour.description,
+                locationType: formData.oneHour.location || 'ONLINE'
+            });
+        }
+
+        if (services.length === 0) {
+            setLocalErrors({ global: 'Please enter details for at least one service' });
+            return;
+        }
+
+        onNext({
+            step: 5,
+            services
+        });
     };
 
     return (
@@ -81,6 +128,11 @@ export default function OnboardingServicesPage() {
                 </div>
 
                 <div className="w-full space-y-8 max-w-[450px] mx-auto">
+                    {(error || localErrors.global) && (
+                        <div className="p-3 text-sm text-red-500 bg-red-50 rounded-lg border border-red-200">
+                            {error?.message || localErrors.global || 'Something went wrong. Please try again.'}
+                        </div>
+                    )}
                     {/* 30 Minutes Training */}
                     <div>
                         <h4 className="text-[16px] font-medium text-[#F37B2F] mb-4">
@@ -105,6 +157,7 @@ export default function OnboardingServicesPage() {
                                 id="thirtyMin.price"
                                 label="Price"
                                 placeholder="Enter here"
+                                type="number"
                                 value={formData.thirtyMin.price}
                                 onChange={(e) => handleChange('thirtyMin', 'price', e.target.value)}
                             />
@@ -143,6 +196,7 @@ export default function OnboardingServicesPage() {
                                 id="oneHour.price"
                                 label="Price"
                                 placeholder="Enter here"
+                                type="number"
                                 value={formData.oneHour.price}
                                 onChange={(e) => handleChange('oneHour', 'price', e.target.value)}
                             />
@@ -162,16 +216,17 @@ export default function OnboardingServicesPage() {
             <div className="w-full flex flex-col-reverse sm:flex-row sm:justify-end gap-[15px] sm:gap-[10px] mt-[40px]">
                 <Button
                     variant="outline"
-                    onClick={handleBack}
+                    onClick={onBack}
                     className="w-full sm:w-[150px] h-[52px] rounded-full text-base font-bold bg-white text-black border !border-black hover:bg-gray-50 bg-opacity-0"
                 >
                     Back
                 </Button>
                 <Button
                     onClick={handleNext}
+                    disabled={isPending}
                     className="bg-black hover:bg-gray-800 text-white w-full sm:w-[250px] h-[52px] rounded-full text-base font-bold"
                 >
-                    Next
+                    {isPending ? 'Saving...' : 'Next'}
                 </Button>
             </div>
         </div>

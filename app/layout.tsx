@@ -11,6 +11,8 @@ export const metadata: Metadata = {
   description: "Train People. Make Money. Your Schedule.",
 };
 
+import QueryProvider from "@/components/providers/QueryProvider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -19,7 +21,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${bebasNeue.variable} ${roboto.variable} font-sans antialiased`} suppressHydrationWarning>
-        {children}
+        <QueryProvider>
+          {children}
+        </QueryProvider>
       </body>
     </html>
   );

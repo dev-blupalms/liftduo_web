@@ -1,39 +1,31 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { loginSchema, LoginFormData } from '@/lib/validations/auth';
+import { useLogin } from '@/hooks/useAuth';
 
 export default function LoginPage() {
-    const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
-    const [formData, setFormData] = useState({ email: '', password: '' });
+    const login = useLogin();
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { id, value } = e.target;
-        setFormData(prev => ({ ...prev, [id]: value }));
-        if (errors[id as keyof typeof errors]) {
-            setErrors(prev => ({ ...prev, [id]: '' }));
-        }
-    };
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+    } = useForm<LoginFormData>({
+        resolver: zodResolver(loginSchema),
+        defaultValues: {
+            email: '',
+            password: '',
+        },
+    });
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        const newErrors: { email?: string; password?: string } = {};
-
-        if (!formData.email) {
-            newErrors.email = 'Email is required';
-        }
-        if (!formData.password) {
-            newErrors.password = 'Password is required';
-        }
-
-        setErrors(newErrors);
-
-        if (Object.keys(newErrors).length === 0) {
-            console.log('Login submitted:', formData);
-        }
+    const onSubmit = (data: LoginFormData) => {
+        login.mutate(data);
     };
 
     return (
@@ -56,16 +48,22 @@ export default function LoginPage() {
                 </p>
             }
         >
-            <form className="space-y-5" onSubmit={handleSubmit}>
+            <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
+                {/* Global Error Message */}
+                {login.isError && (
+                    <div className="p-3 text-sm text-red-500 bg-red-50 rounded-lg border border-red-200">
+                        {login.error?.message || 'Something went wrong. Please try again.'}
+                    </div>
+                )}
+
                 {/* Email */}
                 <Input
                     id="email"
                     label="Email"
                     type="email"
                     placeholder="Enter here"
-                    error={errors.email}
-                    value={formData.email}
-                    onChange={handleChange}
+                    {...register('email')}
+                    error={errors.email?.message}
                 />
 
                 {/* Password */}
@@ -75,9 +73,8 @@ export default function LoginPage() {
                         label="Password"
                         type="password"
                         placeholder="Enter here"
-                        error={errors.password}
-                        value={formData.password}
-                        onChange={handleChange}
+                        {...register('password')}
+                        error={errors.password?.message}
                     />
                     <div className="flex justify-end pt-1">
                         <Link
@@ -90,8 +87,13 @@ export default function LoginPage() {
                 </div>
 
                 {/* Login Button */}
-                <Button type="submit" fullWidth className="text-white">
-                    Login
+                <Button
+                    type="submit"
+                    fullWidth
+                    className="text-white"
+                    disabled={login.isPending}
+                >
+                    {login.isPending ? 'Logging in...' : 'Login'}
                 </Button>
             </form>
         </AuthLayout>

@@ -5,10 +5,114 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client"
-  output   = "../app/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+enum Role {
+  TRAINER
+  CLIENT
+}
+
+enum LocationType {
+  ONLINE
+  OFFLINE
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String?
+  email        String?  @unique
+  phone        String?  @unique
+  passwordHash String?
+  role         Role
+  isVerified   Boolean  @default(false)
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  trainerProfile TrainerProfile?
+  clientProfile  ClientProfile?
+  refreshTokens  RefreshToken[]
+
+  @@index([email])
+  @@index([phone])
+}
+
+model TrainerProfile {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  bio          String?
+  location     String?
+  country      String?
+  state        String?
+  city         String?
+  zip          String?
+  hasGym       Boolean? @default(false)
+  profileImage String?
+  specialtyIds String?  // Comma separated IDs e.g. "uuid1, uuid2"
+  onboardingStep Int      @default(1)
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  services     TrainerService[]
+}
+
+model Specialty {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+}
+
+
+
+model TrainerService {
+  id              String         @id @default(uuid())
+  trainerId       String
+  trainer         TrainerProfile @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  
+  title           String // e.g. "30 min session"
+  durationMinutes Int
+  price           Decimal
+  description     String?
+  locationType    LocationType
+  
+  createdAt       DateTime @default(now())
+}
+
+model ClientProfile {
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  gender           String?
+  heightCm         Float?
+  weightKg         Float?
+  workoutFrequency String?
+  fitnessGoal      String?
+  profileImage     String?
+  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  tokenHash String
+  device    String?
+  ipAddress String?
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+  
+  createdAt DateTime @default(now())
 }
